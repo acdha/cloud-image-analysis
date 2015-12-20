@@ -7,6 +7,7 @@ from itertools import zip_longest
 import json
 import random
 import re
+import sys
 
 PAGE_SIZE = 32
 
@@ -120,6 +121,11 @@ for page_number, page_files in enumerate(grouper(filenames, PAGE_SIZE), start=1)
             for i in response.get('landmarkAnnotations', []):
                 mid = i.get('mid', '')
                 score = i['score']
+
+                if 'description' not in i:
+                    print("Response missing description:", json_filename, file=sys.stderr)
+                    continue
+
                 description = escape(i['description'])
 
                 if mid:
