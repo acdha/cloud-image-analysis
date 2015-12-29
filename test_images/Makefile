@@ -10,4 +10,4 @@ gallery:
 	../generate-gallery.py
 
 publish:
-	aws s3 sync --acl public-read --delete . s3://sandbox.wdl.org/cloud-vision-test/ --exclude="*.png"
+	aws s3 sync --acl public-read --delete . s3://sandbox.wdl.org/cloud-vision-test/ --exclude="*.png" --exclude="*.jpg"
