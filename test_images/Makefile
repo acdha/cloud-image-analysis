@@ -1,9 +1,13 @@
-SOURCE_IMAGES=$(wildcard *.png)
-IMAGE_JSON=$(patsubst %.png,%.json,$(SOURCE_IMAGES))
+SOURCE_PNG=$(wildcard *.png)
+SOURCE_JPG=$(wildcard *.jpg)
+IMAGE_JSON=$(patsubst %.png,%.json,$(SOURCE_IMAGES)) $(patsubst %.jpg,%.json,$(SOURCE_JPG))
 
 all: $(IMAGE_JSON) gallery publish
 
 %.json: %.png
+	../label-images.py $<
+
+%.json: %.jpg
 	../label-images.py $<
 
 gallery:

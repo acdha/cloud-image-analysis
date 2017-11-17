@@ -8,8 +8,12 @@ import json
 import random
 import re
 import sys
+import os
 
 PAGE_SIZE = 32
+
+with open('lc-image-sources.txt', 'r') as lc_sources:
+    LC_SOURCES = {i: (j, k) for i, j, k in (line.strip().split('\t') for line in lc_sources)}
 
 def grouper(iterable, n):
     args = [iter(iterable)] * n
@@ -98,7 +102,21 @@ for page_number, page_files in enumerate(grouper(filenames, PAGE_SIZE), start=1)
     """, file=output_file)
 
     for json_filename in filter(None, page_files):
-        image_filename = json_filename.replace('.json', '.png')
+        jpg_filename = json_filename.replace('.json', '.jpg')
+        if jpg_filename in LC_SOURCES:
+            image_filename = jpg_filename
+            item_url, image_url = LC_SOURCES[image_filename]
+        else:
+            image_filename = json_filename.replace('.json', '.png')
+            image_url = 'http://dl.wdl.org/%s' % image_filename
+            if '_' in image_filename:
+                item_url = 'http://www.wdl.org/en/item/%s/' % re.findall(r'\d+', image_filename)[0]
+            else:
+                item_url = 'http://www.wdl.org/en/item/%s/' % re.sub(r'[^\d]+', '', image_filename)
+
+        if not os.path.exists(image_filename):
+            print('Skipping missing image:', image_filename, file=sys.stderr)
+            continue
 
         with open(json_filename, 'r') as j:
             data = json.load(j)
@@ -144,13 +162,19 @@ for page_number, page_files in enumerate(grouper(filenames, PAGE_SIZE), start=1)
                     labels.append('<li title="%0.02f%%">%s</li>' % (score, description))
 
         print('''
-            <tr id="{0}">
-                <td class="image"><a class="image-wrapper" href="http://dl.wdl.org/{0}"><img src="http://dl.wdl.org/{0}"></a></td>
-                <td class="landmarks"><ul>{1}</ul></td>
-                <td class="labels"><ul>{2}</ul></td>
-                <td class="text"><ul>{3}</ul></td>
+            <tr id="{image_filename}">
+                <td class="image"><a class="image-wrapper" href="{item_url}"><img src="{image_url}"></a></td>
+                <td class="landmarks"><ul>{landmarks}</ul></td>
+                <td class="labels"><ul>{labels}</ul></td>
+                <td class="text"><ul>{text}</ul></td>
             </tr>
-    '''.format(image_filename, "\n".join(landmarks), "\n".join(labels), "\n".join(text)), file=output_file)
+    '''.format(image_filename=image_filename,
+               image_url=image_url,
+               item_url=item_url,
+               landmarks="\n".join(landmarks),
+               labels="\n".join(labels),
+               text="\n".join(text)),
+               file=output_file)
 
     print("""
                 </tbody>
